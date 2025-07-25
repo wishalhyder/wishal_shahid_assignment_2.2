@@ -4,36 +4,77 @@ import firestore from '@react-native-firebase/firestore';
 
 export default function AddUserScreen() {
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [company, setCompany] = useState('');
+  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleAddUser = async () => {
-    if (!name.trim()) {
-      setError('Name is required');
+    // Only validate required fields
+    if (!name.trim() || !email.trim()) {
+      setError('Name and Email are required');
       return;
     }
+
     setLoading(true);
     setError('');
+
     try {
-      await firestore()
-        .collection('users')
-        .add({ name: name.trim(), createdAt: firestore.FieldValue.serverTimestamp() });
+      const userData: Record<string, string | object> = {
+        name: name.trim(),
+        email: email.trim(),
+        createdAt: firestore.FieldValue.serverTimestamp(),
+      };
+
+      // Add optional fields only if filled
+      if (company.trim()) userData.company = company.trim();
+      if (phone.trim()) userData.phone = phone.trim();
+
+      await firestore().collection('users').add(userData);
+
+      // Reset fields
       setName('');
+      setEmail('');
+      setCompany('');
+      setPhone('');
       alert('User added!');
     } catch (e) {
-      setError('Failed to add user');
       console.error(e);
+      setError('Failed to add user');
     }
+
     setLoading(false);
   };
 
   return (
     <View style={styles.container}>
       <TextInput
-        placeholder="Enter user name"
+        placeholder="Enter Name"
         value={name}
         onChangeText={setName}
         style={styles.input}
+      />
+      <TextInput
+        placeholder="Enter Email"
+        value={email}
+        onChangeText={setEmail}
+        style={styles.input}
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
+      <TextInput
+        placeholder="Enter Company (optional)"
+        value={company}
+        onChangeText={setCompany}
+        style={styles.input}
+      />
+      <TextInput
+        placeholder="Enter Phone Number (optional)"
+        value={phone}
+        onChangeText={setPhone}
+        style={styles.input}
+        keyboardType="phone-pad"
       />
       {error ? <Text style={styles.error}>{error}</Text> : null}
       <TouchableOpacity onPress={handleAddUser} style={styles.button} disabled={loading}>
