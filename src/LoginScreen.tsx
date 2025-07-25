@@ -20,7 +20,7 @@ export default function LoginScreen({ navigation }: any) {
       console.log('User logged in:', userCredential.user.uid);
       setError('');
       // Navigate or other logic here
-      navigation.navigate('AllUsers');
+      navigation.navigate('AddUser');
     } catch (e: any) {
       console.log('Login failed:', e);
       setError(e.message);

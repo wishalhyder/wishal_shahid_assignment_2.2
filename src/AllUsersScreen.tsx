@@ -1,17 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { View, FlatList, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, FlatList, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 
 type User = {
   id: string;
   name: string;
-  email: string;
-  company?: string;
-  phone?: string;
-  createdAt?: FirebaseFirestoreTypes.Timestamp;
+  createdAt?: FirebaseFirestoreTypes.Timestamp; // optional timestamp
 };
 
-export default function AllUsersScreen({ navigation }: any) {
+export default function AllUsersScreen() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -24,14 +21,9 @@ export default function AllUsersScreen({ navigation }: any) {
         querySnapshot => {
           const usersList: User[] = [];
           querySnapshot.forEach(doc => {
-            const data = doc.data();
             usersList.push({
               id: doc.id,
-              name: data.name,
-              email: data.email,
-              company: data.company,
-              phone: data.phone,
-              createdAt: data.createdAt,
+              ...(doc.data() as Omit<User, 'id'>),
             });
           });
           setUsers(usersList);
@@ -44,6 +36,7 @@ export default function AllUsersScreen({ navigation }: any) {
         }
       );
 
+    // Cleanup listener on unmount
     return () => unsubscribe();
   }, []);
 
@@ -72,32 +65,21 @@ export default function AllUsersScreen({ navigation }: any) {
   }
 
   return (
-    <View>
     <FlatList
-          data={users}
-          keyExtractor={item => item.id}
-          contentContainerStyle={{ padding: 16 }}
-          renderItem={({ item }) => (
-            <View style={styles.userCard}>
-              <Text style={styles.userName}>{item.name}</Text>
-              <Text style={styles.field}>📧 {item.email}</Text>
-              {item.company ? <Text style={styles.field}>🏢 {item.company}</Text> : null}
-              {item.phone ? <Text style={styles.field}>📞 {item.phone}</Text> : null}
-              {item.createdAt && (
-                <Text style={styles.timestamp}>
-                  🕒 {item.createdAt.toDate().toLocaleString()}
-                </Text>
-              )}
-            </View>
+      data={users}
+      keyExtractor={item => item.id}
+      contentContainerStyle={{ padding: 16 }}
+      renderItem={({ item }) => (
+        <View style={styles.userCard}>
+          <Text style={styles.userName}>{item.name}</Text>
+          {item.createdAt && (
+            <Text style={styles.timestamp}>
+              {item.createdAt.toDate().toLocaleString()}
+            </Text>
           )}
-        />
-        <View style={styles.addContainer}>
-          <TouchableOpacity onPress={()=>{navigation.navigate('AddUser')}} style={styles.loginBtn}>
-            <Text>Add User</Text>
-          </TouchableOpacity>
         </View>
-    </View>
-    
+      )}
+    />
   );
 }
 
@@ -111,37 +93,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     backgroundColor: '#fff',
   },
-  userName: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#B10808',
-    marginBottom: 4,
-  },
-  field: {
-    fontSize: 14,
-    marginBottom: 2,
-    color: '#333',
-  },
-  addContainer:{
-    // backgroundColor: '#000',
-    // justifyContent: 'center',
-    alignItems: 'flex-end',
-    paddingHorizontal: 16
-  },
-  loginBtn:{
-    width:'50%',
-    height: 45,
-    marginTop: 20,
-    backgroundColor: '#B10808',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 5,
-    color: '#ffffff'
-  },
-  timestamp: {
-    marginTop: 6,
-    fontSize: 12,
-    color: '#888',
-  },
+  userName: { fontSize: 18, fontWeight: '600', color: '#B10808' },
+  timestamp: { marginTop: 4, fontSize: 12, color: '#888' },
   error: { color: 'red' },
 });
